@@ -52,7 +52,8 @@ User.init({
     },
 }, {
     sequelize,
-    modelName: 'user'
+    modelName: 'users',
+    freezeTableName: true
 });
 
 // 将表与模型同步，该操作会覆盖数据库中的表
