@@ -6,6 +6,8 @@ const db = require('../db');
 const Sequelize = db.Sequelize;
 const sequelize = db.sequelize;
 const Model = Sequelize.Model;
+// 格式化时间库
+const moment = require('moment');
 
 // 对表建模
 class User extends Model { }
@@ -45,10 +47,16 @@ User.init({
     },
     created: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
+        get() {
+            return moment(this.getDataValue('created')).format('YYYY-MM-DD HH:mm:ss');
+        }
     },
     updated: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        get() {
+            return moment(this.getDataValue('updated')).format('YYYY-MM-DD HH:mm:ss');
+        }
     },
 }, {
     sequelize,

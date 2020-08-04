@@ -10,6 +10,8 @@ const multer = require('multer');
 const path = require('path');
 // 引入配置文件
 const config = require('../config');
+// 引入 fs 文件模块
+const fs = require('fs');
 
 const user = express.Router();
 
@@ -192,100 +194,285 @@ user.post('/login', (req, res) => {
 
 // 修改用户信息接口     /api/user/update
 // 方法：POST
-// 参数，都是可选的：
-// id: 用户 id
-// password: 密码
-// nick_name: 昵称
-// age: 年龄
-// sex: 性别
-// signature: 签名
-// qq: qq号
-// wechat: 微信号
+// 参数，除了 id 都是可选的：
+// id: 用户 id (必需) Number
+// nickName: 昵称   String
+// age: 年龄  Number
+// sex: 性别  Number 1：男，2：女	
+// signature: String 签名
+// qq: qq号   Number
+// wechat: 微信号  String
 user.post('/update', (req, res) => {
-    res.send('user update api');
-});
+    console.log('用户信息更新：', req.body);
+    if (!req.body.id) {
+        res.send({
+            status: 500,
+            msg: '缺少必要参数 id',
+            data: null,
+            timestamp: Date.now()
+        });
+        return;
+    } else {
+        User.findOne({ where: { id: req.body.id } })
+            .then(result => {
+                if (!result) {
+                    res.send({
+                        status: 500,
+                        msg: '用户不存在',
+                        data: null,
+                        timestamp: Date.now()
+                    });
+                    return;
+                } else {
+                    // 用户存在，更新用户数据
+                    User.update({
+                        nick_name: req.body.nickName ? req.body.nickName : result.nickName,
+                        age: req.body.age ? req.body.age : result.age,
+                        sex: req.body.sex ? req.body.sex : result.sex,
+                        signature: req.body.signature ? req.body.signature : result.signature,
+                        qq: req.body.qq ? req.body.qq : result.qq,
+                        wechat: req.body.wechat ? req.body.wechat : result.wechat,
+                        updated: Date.now()
+                    }, { where: { id: req.body.id } })
+                        .then(result2 => {
+                            if (result2) {
+                                // 更新成功，返回最新状态
+                                User.findOne({ where: { id: req.body.id } })
+                                    .then(result3 => {
+                                        if (result3) {
+                                            res.send({
+                                                status: 200,
+                                                msg: '更新成功',
+                                                data: result3,
+                                                timestamp: Date.now()
+                                            });
+                                            return;
+                                        }
+                                    }).catch(err => {
+                                        res.send({
+                                            status: 500,
+                                            msg: err,
+                                            data: null,
+                                            timestamp: Date.now()
+                                        });
+                                        return;
+                                    });
+                            }
+                        }).catch(err => {
+                            res.send({
+                                status: 500,
+                                msg: err,
+                                data: null,
+                                timestamp: Date.now()
+                            });
+                            return;
+                        });
 
-
-// 上传用户头像
-// 方法：POST
-// 表单类型("multipart/form-data")
-// 参数：
-// id：用户id
-// avatar: 头像图片，
-user.post('/uploadAvatar', (req, res) => {
-    console.log('上传头像表单数据：', req.query);
-    // 没有传用户id
-    // res.send({
-    //     status: 500,
-    //     msg: '缺少必要参数 id',
-    //     data: null,
-    //     timestamp: Date.now()
-    // });
-    // return;
-    // 验证用户id
-    User.findOne({ where: { id: req.query.id } })
-        .then(result => {
-            if (!result) {
-                // 用户id无效
+                }
+            }).catch(err => {
                 res.send({
                     status: 500,
-                    msg: '无效的用户id',
+                    msg: err,
                     data: null,
                     timestamp: Date.now()
                 });
                 return;
-            } else {
-                // 有此用户，保存图片
-                upload(req, res, (err) => {
-                    if (err) {
-                        // 该报错信息由过滤函数 checkFileType 或 limits所返回
-                        res.send({
-                            status: 500,
-                            msg: err,
-                            data: null,
-                            timestamp: Date.now()
-                        });
-                        return;
-                    } else {
-                        // 一切正常，获取上传的图片文件，图片信息都在 req.file 中
-                        if (!req.file) {
-                            // 用户没有上传文件而直接点击了提交
+            })
+    }
+});
+
+
+// 上传用户头像     /api/user/uploadAvatar
+// 方法：POST
+// 参数：
+// id：用户id Number 传值方式->query    
+// avatar: 头像图片 File 传值类型->"multipart/form-data"
+user.post('/uploadAvatar', (req, res) => {
+    console.log('上传头像表单数据：', req.query);
+    if (!req.query.id) {
+        // 没有传用户id
+        res.send({
+            status: 500,
+            msg: '缺少必要参数 id',
+            data: null,
+            timestamp: Date.now()
+        });
+        return;
+    } else {
+        User.findOne({ where: { id: req.query.id } })
+            .then(result => {
+                if (!result) {
+                    // 用户id无效
+                    res.send({
+                        status: 500,
+                        msg: '无效的用户id',
+                        data: null,
+                        timestamp: Date.now()
+                    });
+                    return;
+                } else {
+                    // 有此用户，保存图片
+                    upload(req, res, (err) => {
+                        if (err) {
+                            // 该报错信息由过滤函数 checkFileType 或 limits所返回
                             res.send({
                                 status: 500,
-                                msg: '未上传任何图片',
+                                msg: err,
                                 data: null,
                                 timestamp: Date.now()
                             });
+                            return;
                         } else {
-                            // 用户选择了文件并点击了提交，已经保存了文件
-                            // 将文件路径存到数据库然后返回给前端
-                            User.update({ avatar: config.avatarPath + req.file.filename }, { where: { id: req.query.id } })
-                                .then(result => {
-                                    if (result) {
+                            // 一切正常，获取上传的图片文件，图片信息都在 req.file 中
+                            if (!req.file) {
+                                // 用户没有上传文件而直接点击了提交
+                                res.send({
+                                    status: 500,
+                                    msg: '未上传任何图片',
+                                    data: null,
+                                    timestamp: Date.now()
+                                });
+                            } else {
+                                console.log('用户数据：', result);
+                                // 判断是否已经存在图片，如果存在就删除
+                                if (result.avatar) {
+                                    // 获取已经存在的文件路径
+                                    let filename = path.parse(result.avatar).base;
+                                    let dir = path.parse(__dirname).dir;
+                                    let fullPath = path.join(dir, config.avatarPath, filename);
+                                    // 删除图片
+                                    try {
+                                        fs.unlinkSync(fullPath);
+                                        console.log('已成功地删除文件' + fullPath);
+                                    } catch (err) { }
+                                }
+                                // 用户选择了文件并点击了提交，已经保存了文件
+                                // 将文件路径存到数据库然后返回给前端
+                                User.update({ avatar: config.baseUrl + config.avatarNetworkPath + req.file.filename },
+                                    { where: { id: req.query.id } })
+                                    .then(result => {
+                                        if (result) {
+                                            // 更新成功，获取最新记录并返回
+                                            User.findOne({ where: { id: req.query.id } })
+                                                .then(result2 => {
+                                                    if (result2) {
+                                                        res.send({
+                                                            status: 200,
+                                                            msg: '上传成功',
+                                                            data: result2,
+                                                            timestamp: Date.now()
+                                                        });
+                                                        return;
+                                                    }
+                                                }).catch(err => {
+                                                    res.send({
+                                                        status: 500,
+                                                        msg: err,
+                                                        data: null,
+                                                        timestamp: Date.now()
+                                                    });
+                                                    return;
+                                                })
+
+                                        }
+                                    }).catch(err => {
                                         res.send({
-                                            status: 200,
-                                            msg: '上传成功',
-                                            data: result,
+                                            status: 500,
+                                            msg: err,
+                                            data: null,
                                             timestamp: Date.now()
                                         });
-                                    }
-                                })
+                                        return;
+                                    })
+                            }
                         }
-                    }
+                    });
+                }
+            }).catch(err => {
+                res.send({
+                    status: 500,
+                    msg: err,
+                    data: null,
+                    timestamp: Date.now()
                 });
-            }
-        })
+                return;
+            })
+    }
+
 
 
 });
 
 
-// 注销用户
+// 注销(删除)用户     /api/user/delete
 // 方法：POST
 // 参数：
-// id: 用户id
+// id: 用户id Number 必填
 user.post('/delete', (req, res) => {
-    res.send('user delete api');
+    console.log('注销用户：', req.body);
+    if (!req.body.id) {
+        res.send({
+            status: 500,
+            msg: '缺少必要参数 id',
+            data: null,
+            timestamp: Date.now()
+        });
+        return;
+    } else {
+        // 根据用户id查询用户
+        User.findOne({ where: { id: req.body.id } })
+            .then(result => {
+                if (result) {
+                    // 查到了用户，根据 id 删除用户
+                    User.destroy({ where: { id: req.body.id } })
+                        .then(result2 => {
+                            if (result2) {
+                                console.log(result2);
+                                res.send({
+                                    status: 200,
+                                    msg: '删除成功',
+                                    data: null,
+                                    timestamp: Date.now()
+                                });
+                                return;
+                            } else {
+                                res.send({
+                                    status: 500,
+                                    msg: '删除失败',
+                                    data: null,
+                                    timestamp: Date.now()
+                                });
+                                return;
+                            }
+                        }).catch(err => {
+                            res.send({
+                                status: 500,
+                                msg: err,
+                                data: null,
+                                timestamp: Date.now()
+                            });
+                            return;
+                        });
+                } else {
+                    // 用户不存在
+                    res.send({
+                        status: 500,
+                        msg: '用户不存在',
+                        data: null,
+                        timestamp: Date.now()
+                    });
+                    return;
+                }
+            }).catch(err => {
+                res.send({
+                    status: 500,
+                    msg: err,
+                    data: null,
+                    timestamp: Date.now()
+                });
+                return;
+            });
+    }
 });
 
 
