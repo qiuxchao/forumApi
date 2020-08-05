@@ -1,5 +1,4 @@
-// User 用户 模块
-
+// Post 帖子模块
 
 // 引入数据库连接
 const db = require('../db');
@@ -8,41 +7,44 @@ const sequelize = db.sequelize;
 const Model = Sequelize.Model;
 // 格式化时间库
 const moment = require('moment');
-
+ 
 // 对表建模
-class User extends Model { }
-User.init({
+class Post extends Model { }
+Post.init({
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
     },
-    user_name: {
+    title: {
         type: Sequelize.STRING
     },
-    password: {
+    description: {
         type: Sequelize.STRING
     },
-    avatar: {
+    content: {
         type: Sequelize.STRING
     },
-    nick_name: {
-        type: Sequelize.STRING
-    },
-    age: {
+    user_id: {
         type: Sequelize.INTEGER
     },
-    sex: {
+    state: {
         type: Sequelize.INTEGER
     },
-    signature: {
-        type: Sequelize.STRING
+    like: {
+        type: Sequelize.INTEGER
     },
-    qq: {
-        type: Sequelize.STRING
+    page_view: {
+        type: Sequelize.INTEGER
     },
-    wechat: {
+    comments: {
+        type: Sequelize.INTEGER
+    },
+    collect: {
+        type: Sequelize.INTEGER
+    },
+    classify: {
         type: Sequelize.STRING
     },
     created: {
@@ -60,29 +62,11 @@ User.init({
     },
 }, {
     sequelize,
-    modelName: 'users',
+    modelName: 'posts',
     freezeTableName: true
-});
-
-// 将表与模型同步，该操作会覆盖数据库中的表
-// User.sync({ force: true });
-
-module.exports = User;
+})
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+module.exports = Post;

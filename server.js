@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 // 引入用户接口路由
 const user = require('./routes/User');
+// 引入帖子接口路由
+const post = require('./routes/Post');
 
 const app = express();
 
@@ -22,7 +24,7 @@ app.use(bodyParser.json());
 app.use('/public', express.static('./static'));
 // 设置子路由
 app.use('/api/user', user);
-
+app.use('/api/post', post);
 
 
 app.get('/', (req, res) => {

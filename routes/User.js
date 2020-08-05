@@ -282,6 +282,86 @@ user.post('/update', (req, res) => {
 });
 
 
+// 修改用户密码接口     /api/user/changePwd
+// 方法：POST
+// 参数:
+// id: 用户id Number
+// userName: 账号 String
+// password: 新密码 String
+user.post('/changePwd', (req, res) => {
+    if (!req.body.id || !req.body.userName || !req.body.password) {
+        res.send({
+            status: 500,
+            msg: '缺少必要参数 id | userName | password',
+            data: null,
+            timestamp: Date.now()
+        });
+        return;
+    } else {
+        User.findOne({
+            where: {
+                id: req.body.id,
+                user_name: req.body.userName
+            }
+        }).then(result => {
+            if (!result) {
+                res.send({
+                    status: 500,
+                    msg: '用户不存在',
+                    data: null,
+                    timestamp: Date.now()
+                });
+                return;
+            } else {
+                // 用户存在，加密密码
+                bcript.hash(req.body.password, 10, (err, hash) => {
+                    let password = hash;
+                    User.update({ password: password, updated: Date.now() },
+                        {
+                            where: { id: req.body.id, user_name: req.body.userName }
+                        }).then(result2 => {
+                            if (result2) {
+                                res.send({
+                                    status: 200,
+                                    msg: '修改成功',
+                                    data: null,
+                                    timestamp: Date.now()
+                                });
+                                return;
+                            } else {
+                                res.send({
+                                    status: 500,
+                                    msg: '修改失败',
+                                    data: null,
+                                    timestamp: Date.now()
+                                });
+                                return;
+                            }
+                        }).catch(err => {
+                            res.send({
+                                status: 500,
+                                msg: err,
+                                data: null,
+                                timestamp: Date.now()
+                            });
+                            return;
+                        });
+                })
+            }
+        }).catch(err => {
+            res.send({
+                status: 500,
+                msg: err,
+                data: null,
+                timestamp: Date.now()
+            });
+            return;
+        });
+    }
+});
+
+
+
 // 上传用户头像     /api/user/uploadAvatar
 // 方法：POST
 // 参数：
@@ -348,7 +428,7 @@ user.post('/uploadAvatar', (req, res) => {
                                 }
                                 // 用户选择了文件并点击了提交，已经保存了文件
                                 // 将文件路径存到数据库然后返回给前端
-                                User.update({ avatar: config.baseUrl + config.avatarNetworkPath + req.file.filename },
+                                User.update({ avatar: config.baseUrl + config.avatarNetworkPath + req.file.filename, updated: Date.now() },
                                     { where: { id: req.query.id } })
                                     .then(result => {
                                         if (result) {
