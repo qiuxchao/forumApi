@@ -180,6 +180,14 @@ user.post('/login', (req, res) => {
                     });
                     return;
                 }
+            }).catch(err => {
+                res.send({
+                    status: 500,
+                    msg: err,
+                    data: null,
+                    timestamp: Date.now()
+                });
+                return;
             })
     } else {
         res.send({

@@ -44,13 +44,13 @@ post.post('/allPosts', (req, res) => {
         return;
     } else {
         Post.findAndCountAll({
-            where: {state: 1},   // 查询审核通过的
+            where: { state: 2 },   // 查询审核通过的
             offset: parseInt(body.currentPage), // 第几页
             limit: parseInt(body.pageSize),     // 每页数据数量
             distinct: true,      // 去重
-            order: [[ 'created', 'DESC' ]], // 排序
+            order: [['created', 'DESC']], // 排序
         }).then(result => {
-            if(result) {
+            if (result) {
                 res.send({
                     status: 200,
                     msg: '获取帖子列表成功',
@@ -163,7 +163,87 @@ post.post('/publicPost', (req, res) => {
 })
 
 
-
+// 根据帖子id获取单个帖子的数据     /api/post/singlePost
+// 方法：POST
+// 参数：
+// id: 帖子id -> Number
+post.post('/singlePost', (req, res) => {
+    console.log('根据id查单条帖子：', req.body);
+    if (!req.body.id) {
+        res.send({
+            status: 500,
+            msg: '缺少必要参数 id',
+            data: null,
+            timestamp: Date.now()
+        });
+        return;
+    } else {
+        Post.findOne({ where: { id: req.body.id } })
+            .then(result => {
+                if (result) {
+                    // 将帖子的浏览量+1
+                    pageView = result.page_view ? result.page_view + 1 : 1;
+                    Post.update({ page_view: pageView }, { where: { id: req.body.id } })
+                        .then(result2 => {
+                            if (result2) {
+                                Post.findOne({ where: { id: req.body.id } })
+                                    .then(result3 => {
+                                        if (result3) {
+                                            res.send({
+                                                status: 200,
+                                                msg: '查询帖子成功',
+                                                data: result3,
+                                                timestamp: Date.now()
+                                            });
+                                            return;
+                                        } else {
+                                            res.send({
+                                                status: 200,
+                                                msg: '查询帖子成功',
+                                                data: result,
+                                                timestamp: Date.now()
+                                            });
+                                            return;
+                                        }
+                                    }).catch(err => {
+                                        res.send({
+                                            status: 500,
+                                            msg: err,
+                                            data: null,
+                                            timestamp: Date.now()
+                                        });
+                                        return;
+                                    });
+                            }
+                        }).catch(err => {
+                            res.send({
+                                status: 500,
+                                msg: err,
+                                data: null,
+                                timestamp: Date.now()
+                            });
+                            return;
+                        });
+                } else {
+                    res.send({
+                        status: 500,
+                        msg: '帖子不存在',
+                        data: null,
+                        timestamp: Date.now()
+                    });
+                    return;
+                }
+            }).catch(err => {
+                res.send({
+                    status: 500,
+                    msg: err,
+                    data: null,
+                    timestamp: Date.now()
+                });
+                return;
+            })
+    }
+});
 
 
 
