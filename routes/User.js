@@ -100,7 +100,8 @@ user.post('/register', (req, res) => {
                         let password = hash;
                         let obj = {
                             user_name: req.body.userName,
-                            password: password
+                            password: password,
+                            nick_name: '小萌新' + Date.now()
                         };
                         User.create(obj).then(result => {
                             if (result) {
@@ -108,10 +109,7 @@ user.post('/register', (req, res) => {
                                 res.send({
                                     status: 200,
                                     msg: '注册成功',
-                                    data: {
-                                        userName: req.body.userName,
-                                        password: password
-                                    },
+                                    data: result,
                                     timestamp: Date.now()
                                 });
                             }
@@ -436,7 +434,7 @@ user.post('/uploadAvatar', (req, res) => {
                                 }
                                 // 用户选择了文件并点击了提交，已经保存了文件
                                 // 将文件路径存到数据库然后返回给前端
-                                User.update({ avatar: config.baseUrl + config.avatarNetworkPath + req.file.filename, updated: Date.now() },
+                                User.update({ avatar: config.avatarNetworkPath + req.file.filename, updated: Date.now() },
                                     { where: { id: req.query.id } })
                                     .then(result => {
                                         if (result) {

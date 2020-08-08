@@ -21,7 +21,8 @@ const post = express.Router();
 
 
 // 路由列表
-post.get('/', (req, res) => {
+post.post('/', (req, res) => {
+    console.log(req.body);
     res.send('post is works');
 });
 

@@ -5,6 +5,9 @@ const user = require('./routes/User');
 // 引入帖子接口路由
 const post = require('./routes/Post');
 
+// 引入配置文件
+const config = require('./config');
+
 const app = express();
 
 //设置允许跨域访问该服务.
@@ -32,7 +35,7 @@ app.get('/', (req, res) => {
 });
 
 const port = process.env.PORT || '5000';
-app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
+app.listen(port, () => console.log(`Server is running on http://${config.ip}:${port}`));
 
 
 
