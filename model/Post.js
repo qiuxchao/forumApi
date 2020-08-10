@@ -5,6 +5,7 @@ const db = require('../db');
 const Sequelize = db.Sequelize;
 const sequelize = db.sequelize;
 const Model = Sequelize.Model;
+const User = require('./User');
 // 格式化时间库
 const moment = require('moment');
  
@@ -65,6 +66,9 @@ Post.init({
     modelName: 'posts',
     freezeTableName: true
 })
+
+// Post 表与 User 表根据 user_id 关联查询
+Post.belongsTo(User, {foreignKey: 'user_id'});
 
 
 

@@ -50,6 +50,10 @@ post.post('/allPosts', (req, res) => {
             limit: parseInt(body.pageSize),     // 每页数据数量
             distinct: true,      // 去重
             order: [['created', 'DESC']], // 排序
+            include: [{ // include关键字表示关联查询
+                model: User, // 指定关联的model
+                attributes: ['nick_name', 'avatar'], // 这里的attributes属性表示查询users表的name和rank字段，其中对name字段起了别名className
+            }]
         }).then(result => {
             if (result) {
                 res.send({

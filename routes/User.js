@@ -563,6 +563,27 @@ user.post('/delete', (req, res) => {
 
 
 
+// 获取全部用户
+user.post('/allUsers', (req, res) => {
+    User.findAll()
+        .then(result => {
+            res.send({
+                status: 200,
+                msg: '获取用户列表成功',
+                data: result,
+                timestamp: Date.now()
+            });
+        }).catch(err => {
+            res.send({
+                status: 500,
+                msg: err,
+                data: null,
+                timestamp: Date.now()
+            });
+        });
+})
+
+
 
 // 导出用户接口路由
 module.exports = user;
